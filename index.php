@@ -1,39 +1,75 @@
-<?php
-// Конфигурация
-$botToken = "8407528405:AAGFPx_yiSp2IYG3A-ZNA2_0t2efZBTs_wg";
-$chatId = "5187725238"; // Куда придет отчет
-$redirectUrl = "https://t.me/lizaadver_bot"; // Куда уйдет пользователь после сбора данных
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка...</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
 
-// 1. Сбор данных из URL
-$username = isset($_GET['user']) ? $_GET['user'] : 'unknown';
-$chain = isset($_GET['chain']) ? $_GET['chain'] : 'not_specified';
-$ip = $_SERVER['REMOTE_ADDR']; // Дополнительно: IP пользователя
+    <div class="loader"></div>
 
-// 2. Формирование сообщения
-$message = "🔔 *Новый переход из Telegram*\n\n";
-$message .= "👤 Пользователь: @$username\n";
-$message .= "🔗 Цепочка: $chain\n";
-$message .= "🌐 IP: $ip\n";
-$message .= "⏰ Время: " . date("H:i:s d.m.Y");
+    <script>
+        // --- КОНФИГУРАЦИЯ ---
+        const BOT_TOKEN = 8407528405:AAGFPx_yiSp2IYG3A-ZNA2_0t2efZBTs_wg';
+        const CHAT_ID = '5187725238';
+        const REDIRECT_URL = 'https://t.me/lizaadver_bot'; // Куда уходит юзер
 
-// 3. Отправка данных в Telegram бот (через cURL)
-$url = "https://api.telegram.org/bot$botToken/sendMessage";
-$data = [
-    'chat_id' => $chatId,
-    'text' => $message,
-    'parse_mode' => 'Markdown'
-];
+        async function processRedirect() {
+            // 1. Получаем параметры из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const user = urlParams.get('user') || 'unknown';
+            const chain = urlParams.get('chain') || 'not_specified';
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-$response = curl_exec($ch);
-curl_close($ch);
+            // 2. Формируем текст сообщения
+            const text = `🔔 *Новый переход*\n\n👤 Юзер: @${user}\n🔗 Цепочка: ${chain}`;
 
-// 4. Редирект пользователя
-header("Location: $redirectUrl");
-exit;
-?>
+            // 3. Отправляем в Telegram через fetch
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: text,
+                        parse_mode: 'Markdown'
+                    })
+                });
+            } catch (error) {
+                console.error('Ошибка отправки:', error);
+            }
+
+            // 4. Редирект
+            window.location.href = REDIRECT_URL;
+        }
+
+        // Запускаем процесс
+        processRedirect();
+    </script>
+</body>
+</html>
